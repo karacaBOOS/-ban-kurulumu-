@@ -16,7 +16,8 @@ button.s{background:none;color:#f0d69b}
 <script>
 var a=document.getElementById("a");
 function e(t,c,x){var d=document.createElement(t);if(c)d.className=c;if(x)d.textContent=x;return d}
-var k=new URLSearchParams(location.search).get("k");
+var k=(new URLSearchParams(location.search).get("k")||"").trim();
+
 if(!k||!/^[a-z0-9_-]{1,40}$/i.test(k)){a.appendChild(e("p","e","IBAN.UNO - kartini okut."))}
 else fetch("profiller.json",{cache:"no-store"}).then(function(r){return r.json()}).then(function(db){
  k=k.toLowerCase();
