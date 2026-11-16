@@ -19,7 +19,14 @@ function e(t,c,x){var d=document.createElement(t);if(c)d.className=c;if(x)d.text
 var k=(new URLSearchParams(location.search).get("k")||"").trim();
 
 if(!k||!/^[a-z0-9_-]{1,40}$/i.test(k)){a.appendChild(e("p","e","IBAN.UNO - kartini okut."))}
-else fetch("profiller.json",{cache:"no-store"}).then(function(r){return r.json()}).then(function(db){
+else fetch(SUPABASE_URL + "/rest/v1/rpc/kart_goster", {
+  method: "POST",
+  headers: {
+    "apikey": SUPABASE_KEY,
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({p_kod: k})
+}).then(function(r){return r.json()}).then(function(db){
  k=k.toLowerCase();
  if(!Object.prototype.hasOwnProperty.call(db,k)){a.appendChild(e("p","e","Kart bulunamadi."));return}
  var p=db[k],ib=String(p.iban||"").replace(/\s+/g,"").toUpperCase(),ad=String(p.ad||"");
@@ -35,5 +42,5 @@ else fetch("profiller.json",{cache:"no-store"}).then(function(r){return r.json()
  var b1=e("button","","IBAN'ı kopyala");b1.onclick=function(){cp(ib,"IBAN kopyalandı ✓")};
  var b2=e("button","s","Ad soyad + IBAN'ı kopyala");b2.onclick=function(){cp(ad+"\n"+ib,"Kopyalandı ✓")};
  a.appendChild(b1);a.appendChild(b2);a.appendChild(m);
-}).catch(function(){a.appendChild(e("p","e","Bilgiler yuklenemedi."))});
-</script></body></html>
+}).catch(function(){a.appendChild(e("p","e","Bilgiler yuklenemedi."))});const SUPABASE_URL = "https://xnfungabohooyiacqquf.supabase.co";
+const SUPABASE_KEY = "sb_publishable_ZFKSVnGpSMy4DjbZ3_jHgA_WwMSYWRh"; </script></body></html>
