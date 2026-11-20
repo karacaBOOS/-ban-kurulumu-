@@ -1,108 +1,46 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>IBAN.UNO Yönetim</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IBAN.UNO | Güvenli Yönetim</title>
 <style>
-body{background:#0b0b0b;color:#d4af37;font-family:Arial,sans-serif;padding:24px}
-main{max-width:440px;margin:auto}
-.card{background:#191919;padding:22px;border:1px solid #665522;border-radius:16px}
-input,button{padding:12px;border-radius:8px;margin-top:10px;width:100%;box-sizing:border-box}
-button{background:#d4af37;color:#111;border:0;font-weight:bold}
-#sonuc{color:#eee;overflow-wrap:anywhere}
+:root{color-scheme:dark;--bg:#090909;--box:#171717;--gold:#d8b56d;--light:#f7f2e5;--muted:#b9b2a3}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--light);font:16px system-ui,-apple-system,sans-serif;padding:22px 14px}main{max-width:650px;margin:16px auto 50px}header{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:24px}h1{color:var(--gold);letter-spacing:.07em;margin:0;font-size:29px}h2{color:var(--gold);font-size:20px;margin:0 0 16px}.sub{font-size:13px;color:var(--muted);margin-top:6px}.card{background:var(--box);border:1px solid #69572e;border-radius:17px;padding:20px;margin:14px 0}label{display:block;color:var(--muted);font-size:13px;margin:14px 0 6px}input{width:100%;padding:13px;border:1px solid #5c513e;border-radius:9px;background:#101010;color:white;font:inherit}input:focus{outline:2px solid var(--gold)}button{border:0;border-radius:10px;background:var(--gold);color:#16120c;padding:13px 18px;font:inherit;font-weight:750;cursor:pointer}button:disabled{opacity:.5;cursor:wait}.secondary{border:1px solid var(--gold);color:var(--gold);background:transparent}.small{font-size:13px;padding:9px 12px}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:17px}.actions>*{flex:1}.hidden{display:none!important}.notice{font-size:14px;line-height:1.5;color:var(--muted);margin:12px 0;white-space:pre-wrap}.error{color:#ffb1a9}.good{color:#a9e5bb}.item{background:#101010;border:1px solid #393229;border-radius:12px;padding:15px;margin-top:10px}.item strong{display:block;color:var(--gold);font-size:16px}.item p{overflow-wrap:anywhere;margin:7px 0;color:var(--muted);font-size:14px}.code{font-family:ui-monospace,monospace;font-size:14px;color:var(--light)}.row{display:flex;justify-content:space-between;gap:12px;align-items:center}.row button{flex:0 0 auto}@media(max-width:400px){.row{align-items:flex-start;flex-direction:column}}footer{font-size:12px;color:#938a7b;text-align:center;margin-top:20px}
 </style>
-</head>
-<body>
-<main>
-<h1>IBAN.UNO</h1>
-<div class="card">
-<h2>Yönetim Paneli</h2>
-<p>Supabase bağlantı testi</p>
-<input id="adres" placeholder="Supabase Project URL">
-<input id="anahtar" placeholder="Publishable key">
-<button onclick="testEt()">Bağlantıyı Test Et</button>
-<p id="sonuc"></p>
-</div>
-</main>
+</head><body><main>
+<header><div><h1>IBAN.UNO</h1><div class="sub">Güvenli NFC Kart Yönetimi</div></div><button id="logout" class="secondary small hidden" type="button">Çıkış</button></header>
+<section id="loginPanel" class="card"><h2>Yönetici Girişi</h2><p class="notice">Supabase'de tanımlı yönetici hesabının e-posta ve şifresiyle giriş yap.</p><form id="loginForm"><label for="email">E-posta</label><input id="email" type="email" autocomplete="username" required><label for="password">Şifre</label><input id="password" type="password" autocomplete="current-password" required><div class="actions"><button id="loginButton" type="submit">Giriş yap</button></div></form><p id="loginStatus" class="notice" role="status" aria-live="polite"></p></section>
+<section id="app" class="hidden"><section class="card"><div class="row"><h2>Kartlarım</h2><button type="button" id="refresh" class="secondary small">Yenile</button></div><p class="notice" id="listStatus" role="status" aria-live="polite"></p><div id="cards"></div></section>
+<section class="card"><h2 id="formHeading">Yeni kart ekle</h2><form id="cardForm"><label for="kart_kodu">Kart kodu (NFC bağlantısındaki k değeri)</label><input id="kart_kodu" required minlength="1" maxlength="40" pattern="[a-zA-Z0-9_-]+" placeholder="ornek001" autocapitalize="off"><label for="ad_soyad">Ad soyad</label><input id="ad_soyad" required maxlength="100"><label for="iban">IBAN</label><input id="iban" required maxlength="45" placeholder="TR..." autocapitalize="characters"><label for="banka">Banka</label><input id="banka" maxlength="100"><div class="actions"><button type="submit" id="saveButton">Kartı kaydet</button><button type="button" id="cancelEdit" class="secondary hidden">İptal</button></div></form><p id="formStatus" class="notice" role="status" aria-live="polite"></p></section></section>
+<footer>IBAN.UNO • Yönetici girişi zorunludur. Gizli servis anahtarlarını bu sayfaya eklemeyin.</footer></main>
 <script>
-async function testEt(){
-const adres=document.getElementById("adres").value.trim().replace(/\/$/,"");
-const anahtar=document.getElementById("anahtar").value.trim();
-const sonuc=document.getElementById("sonuc");
-if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(adres)||!anahtar.startsWith("sb_publishable_")){
-sonuc.textContent="Geçerli proje adresi ve publishable key gir.";
-return;
+'use strict';
+const URL_BASE='https://xnfungabohooyiacqquf.supabase.co';
+const PUBLIC_KEY='sb_publishable_ZFKSVnGpSMy4DjbZ3_jHgA_WwMSYWRh';
+const $=id=>document.getElementById(id);
+let session=null,editCode=null;
+function status(id,msg,error=false){const el=$(id);el.textContent=msg;el.className='notice '+(error?'error':'');}
+function toggle(loggedIn){$('loginPanel').classList.toggle('hidden',loggedIn);$('app').classList.toggle('hidden',!loggedIn);$('logout').classList.toggle('hidden',!loggedIn);}
+function clearSession(){session=null;sessionStorage.removeItem('iban_uno_session');toggle(false);$('cards').replaceChildren();}
+function saveSession(s){session={access_token:s.access_token,refresh_token:s.refresh_token,expires_at:Date.now()+(Number(s.expires_in)||3600)*1000};sessionStorage.setItem('iban_uno_session',JSON.stringify(session));}
+async function request(path,opts={}){
+ const headers={'apikey':PUBLIC_KEY,'Content-Type':'application/json',...(opts.headers||{})};
+ const res=await fetch(URL_BASE+path,{...opts,headers});
+ const raw=await res.text();let data;try{data=raw?JSON.parse(raw):null;}catch{data=raw;}
+ if(!res.ok){const err=new Error((data&&(data.msg||data.message||data.error_description||data.error))||('HTTP '+res.status));err.httpStatus=res.status;throw err;}
+ return data;
 }
-sonuc.textContent="Kontrol ediliyor...";
-try{
-const r=await fetch(adres+"/auth/v1/settings",{
-headers:{"apikey":anahtar}
-});
-sonuc.textContent=r.ok?"Bağlantı başarılı!":"Bağlantı hatası: "+r.status;
-}catch(e){
-sonuc.textContent="Bağlantı kurulamadı: "+e.message;
-}
-}
-</script>
-<section id="kart-yonetimi" class="card">
-  <h2>Kart Yönetimi</h2>
-  <p>NFC kartlarını buradan yöneteceğiz.</p>
-  <button type="button" onclick="kartlariGetir()">
-    Kartları Listele
-  </button>
-  <p id="kart-durum"></p>
-  <div id="kart-listesi"></div>
-</section>
-
-<script>
-async function kartlariGetir() {
-  const durum = document.getElementById("kart-durum");
-  const liste = document.getElementById("kart-listesi");
-  const adres = document.getElementById("adres").value.trim().replace(/\/$/, "");
-  const anahtar = document.getElementById("anahtar").value.trim();
-
-  liste.replaceChildren();
-
-  if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(adres) ||
-      !anahtar.startsWith("sb_publishable_")) {
-    durum.textContent = "Önce Supabase adresini ve publishable key gir.";
-    return;
-  }
-
-  durum.textContent = "Kartlar kontrol ediliyor...";
-
-  try {
-    const cevap = await fetch(
-      adres + "/rest/v1/kartlar?select=kart_kodu,ad_soyad&limit=20",
-      { headers: { apikey: anahtar } }
-    );
-
-    if (!cevap.ok) {
-      durum.textContent = "Erişim sağlanamadı: " + cevap.status;
-      return;
-    }
-
-    const kartlar = await cevap.json();
-    durum.textContent = kartlar.length
-      ? kartlar.length + " kart bulundu."
-      : "Görüntüleme yetkisi olan kart bulunamadı.";
-
-    for (const kart of kartlar) {
-      const satir = document.createElement("p");
-      satir.textContent = kart.kart_kodu + " — " + kart.ad_soyad;
-      liste.appendChild(satir);
-    }
-  } catch (hata) {
-    durum.textContent = "Bağlantı hatası: " + hata.message;
-  }
-}
-</script>
-</body>
-</html>
-<!-- IBAN UNO yeni yayin -->
-<!-- Panel yeniden yayinlama -->
-
-
-
+async function ensureAccess(){if(!session?.access_token)throw new Error('Önce giriş yap.');if(Date.now()<session.expires_at-60000)return session.access_token;if(!session.refresh_token){clearSession();throw new Error('Oturum süresi doldu. Yeniden giriş yap.');}try{const s=await request('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:session.refresh_token})});saveSession(s);return session.access_token;}catch{clearSession();throw new Error('Oturum yenilenemedi. Yeniden giriş yap.');}}
+async function secured(path,opts={}){const token=await ensureAccess();return request(path,{...opts,headers:{Authorization:'Bearer '+token,...opts.headers}});}
+async function activate(){const isAdmin=await secured('/rest/v1/rpc/is_iban_admin',{method:'POST',body:'{}'});if(isAdmin!==true){clearSession();throw new Error('Bu hesap yönetici olarak tanımlanmamış.');}toggle(true);$('password').value='';await loadCards();}
+$('loginForm').addEventListener('submit',async event=>{event.preventDefault();$('loginButton').disabled=true;status('loginStatus','Giriş kontrol ediliyor...');try{const s=await request('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:$('email').value.trim(),password:$('password').value})});saveSession(s);await activate();status('loginStatus','');}catch(e){if(session)clearSession();status('loginStatus','Giriş başarısız: '+e.message,true);}finally{$('loginButton').disabled=false;}});
+$('logout').addEventListener('click',async()=>{const token=session?.access_token;clearSession();if(token){try{await request('/auth/v1/logout',{method:'POST',headers:{Authorization:'Bearer '+token}});}catch{}}status('loginStatus','Oturum kapatıldı.');});
+function text(tag,value,cls){const el=document.createElement(tag);el.textContent=value??'';if(cls)el.className=cls;return el;}
+async function loadCards(){status('listStatus','Kartlar yükleniyor...');$('cards').replaceChildren();try{const cards=await secured('/rest/v1/kartlar?select=kart_kodu,ad_soyad,iban,banka&order=created_at.desc');status('listStatus',cards.length+' kart bulundu.');for(const card of cards){const el=text('div','','item');const header=text('div','','row');const info=text('div');info.append(text('strong',card.ad_soyad),text('span',card.kart_kodu,'code'));const edit=text('button','Düzenle','secondary small');edit.type='button';edit.addEventListener('click',()=>editCard(card));header.append(info,edit);el.append(header,text('p',card.banka||'Banka belirtilmedi'),text('p',card.iban));$('cards').append(el);}}catch(e){status('listStatus','Kart listelenemedi: '+e.message,true);}}
+$('refresh').addEventListener('click',loadCards);
+function editCard(card){editCode=card.kart_kodu;$('formHeading').textContent='Kartı düzenle';$('kart_kodu').value=card.kart_kodu;$('kart_kodu').readOnly=true;$('ad_soyad').value=card.ad_soyad;$('iban').value=card.iban;$('banka').value=card.banka||'';$('saveButton').textContent='Değişiklikleri kaydet';$('cancelEdit').classList.remove('hidden');status('formStatus','Kart kodu sabittir; isim, banka ve IBAN düzenlenebilir.');$('cardForm').scrollIntoView({behavior:'smooth',block:'start'});}
+function resetEdit(){$('cardForm').reset();editCode=null;$('kart_kodu').readOnly=false;$('formHeading').textContent='Yeni kart ekle';$('saveButton').textContent='Kartı kaydet';$('cancelEdit').classList.add('hidden');}
+$('cancelEdit').addEventListener('click',()=>{resetEdit();status('formStatus','');});
+$('cardForm').addEventListener('submit',async event=>{event.preventDefault();const code=$('kart_kodu').value.trim().toLowerCase();const iban=$('iban').value.replace(/\s+/g,'').toUpperCase();if(!/^[a-z0-9_-]{1,40}$/.test(code)){status('formStatus','Kart kodu yalnızca küçük harf, rakam, _ ve - içermeli.',true);return;}if(!/^TR\d{24}$/.test(iban)){status('formStatus','IBAN TR ile başlamalı ve toplam 26 karakter olmalı.',true);return;}const payload={ad_soyad:$('ad_soyad').value.trim(),iban,banka:$('banka').value.trim()};if(!payload.ad_soyad){status('formStatus','Ad soyad gerekli.',true);return;}$('saveButton').disabled=true;status('formStatus','Kaydediliyor...');try{if(editCode){await secured('/rest/v1/kartlar?kart_kodu=eq.'+encodeURIComponent(editCode),{method:'PATCH',body:JSON.stringify(payload),headers:{Prefer:'return=minimal'}});}else{await secured('/rest/v1/kartlar',{method:'POST',body:JSON.stringify({...payload,kart_kodu:code}),headers:{Prefer:'return=minimal'}});}resetEdit();status('formStatus','Kart başarıyla kaydedildi.');await loadCards();}catch(e){status('formStatus','Kaydetme hatası: '+e.message,true);}finally{$('saveButton').disabled=false;}});
+(async()=>{try{const old=sessionStorage.getItem('iban_uno_session');if(old){session=JSON.parse(old);await activate();}}catch(e){clearSession();status('loginStatus','Tekrar giriş yapman gerekiyor.');}})();
+</script></body></html>
