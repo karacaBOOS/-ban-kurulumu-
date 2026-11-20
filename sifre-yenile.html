@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://xnfungabohooyiacqquf.supabase.co; form-action 'none'; base-uri 'none'"><title>IBAN.UNO | Şifre Yenile</title><style>*{box-sizing:border-box}body{margin:0;background:#090909;color:#f7f2e5;font:16px system-ui,-apple-system,sans-serif;padding:25px 16px}main{max-width:430px;margin:12vh auto}.card{border:1px solid #806b3a;background:#171717;border-radius:18px;padding:25px}h1,h2{color:#d8b56d}h1{letter-spacing:.08em}label{display:block;margin:18px 0 8px}input,button{font:inherit;width:100%;border-radius:9px;padding:14px}input{background:#0d0d0d;color:white;border:1px solid #746345}button{margin-top:20px;border:0;background:#d8b56d;color:#14110b;font-weight:700}button:disabled{opacity:.55}p{line-height:1.5;color:#beb8ac}#message{overflow-wrap:anywhere}a{color:#e3c681}</style></head><body><main><h1>IBAN.UNO</h1><section class="card"><h2>Yeni yönetici şifresi</h2><p>Bu sayfayı yalnızca Supabase şifre sıfırlama e-postasındaki bağlantıdan aç.</p><form id="f" hidden><label for="p1">Yeni şifre (en az 12 karakter)</label><input id="p1" type="password" autocomplete="new-password" minlength="12" required><label for="p2">Yeni şifreyi tekrar yaz</label><input id="p2" type="password" autocomplete="new-password" minlength="12" required><button id="save" type="submit">Şifreyi değiştir</button></form><p id="message" role="status">Sıfırlama bağlantısı doğrulanıyor...</p><p><a href="./panel.html">Yönetim paneline dön</a></p></section></main><script>
+'use strict';
+const url='https://xnfungabohooyiacqquf.supabase.co';
+const key='sb_publishable_ZFKSVnGpSMy4DjbZ3_jHgA_WwMSYWRh';
+const hash=new URLSearchParams(location.hash.slice(1));
+let token=hash.get('access_token');
+const kind=hash.get('type');
+history.replaceState(null,'',location.pathname);
+const form=document.getElementById('f'),message=document.getElementById('message'),button=document.getElementById('save');
+if(kind==='recovery' && token){form.hidden=false;message.textContent='Yeni ve benzersiz bir şifre belirleyebilirsin.';}
+else{message.textContent='Geçerli bir şifre sıfırlama bağlantısı bulunamadı. Supabase üzerinden yeni bir şifre sıfırlama e-postası iste.';}
+form.addEventListener('submit',async e=>{
+ e.preventDefault();
+ const a=document.getElementById('p1').value,b=document.getElementById('p2').value;
+ if(a.length<12){message.textContent='Şifre en az 12 karakter olmalı.';return;}
+ if(a!==b){message.textContent='Şifreler eşleşmiyor.';return;}
+ button.disabled=true;message.textContent='Şifre güncelleniyor...';
+ try{
+ const r=await fetch(url+'/auth/v1/user',{method:'PUT',headers:{'apikey':key,'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({password:a}),cache:'no-store'});
+ const data=await r.json().catch(()=>({}));
+ if(!r.ok)throw new Error(data.msg||data.message||data.error_description||data.error||('HTTP '+r.status));
+ form.hidden=true;message.textContent='Şifren değiştirildi! Yönetim paneline gidip e-posta adresin ve yeni şifrenle giriş yap.';
+ token=null;document.getElementById('p1').value='';document.getElementById('p2').value='';
+ }catch(err){message.textContent='Şifre değiştirilemedi: '+err.message;button.disabled=false;}
+});
+</script></body></html>
