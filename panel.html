@@ -58,8 +58,45 @@ sonuc.textContent="Bağlantı kurulamadı: "+e.message;
 
 <script>
 async function kartlariGetir() {
-  document.getElementById("kart-durum").textContent =
-    "Kart bağlantısı henüz yapılandırılmadı.";
+  const durum = document.getElementById("kart-durum");
+  const liste = document.getElementById("kart-listesi");
+  const adres = document.getElementById("adres").value.trim().replace(/\/$/, "");
+  const anahtar = document.getElementById("anahtar").value.trim();
+
+  liste.replaceChildren();
+
+  if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(adres) ||
+      !anahtar.startsWith("sb_publishable_")) {
+    durum.textContent = "Önce Supabase adresini ve publishable key gir.";
+    return;
+  }
+
+  durum.textContent = "Kartlar kontrol ediliyor...";
+
+  try {
+    const cevap = await fetch(
+      adres + "/rest/v1/kartlar?select=kart_kodu,ad_soyad&limit=20",
+      { headers: { apikey: anahtar } }
+    );
+
+    if (!cevap.ok) {
+      durum.textContent = "Erişim sağlanamadı: " + cevap.status;
+      return;
+    }
+
+    const kartlar = await cevap.json();
+    durum.textContent = kartlar.length
+      ? kartlar.length + " kart bulundu."
+      : "Görüntüleme yetkisi olan kart bulunamadı.";
+
+    for (const kart of kartlar) {
+      const satir = document.createElement("p");
+      satir.textContent = kart.kart_kodu + " — " + kart.ad_soyad;
+      liste.appendChild(satir);
+    }
+  } catch (hata) {
+    durum.textContent = "Bağlantı hatası: " + hata.message;
+  }
 }
 </script>
 </body>
