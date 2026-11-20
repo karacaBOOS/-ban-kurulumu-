@@ -46,5 +46,22 @@ sonuc.textContent="Bağlantı kurulamadı: "+e.message;
 }
 }
 </script>
+<section id="kart-yonetimi" class="card">
+  <h2>Kart Yönetimi</h2>
+  <p>NFC kartlarını buradan yöneteceğiz.</p>
+  <button type="button" onclick="kartlariGetir()">
+    Kartları Listele
+  </button>
+  <p id="kart-durum"></p>
+  <div id="kart-listesi"></div>
+</section>
+
+<script>
+async function kartlariGetir() {
+  document.getElementById("kart-durum").textContent =
+    "Kart bağlantısı henüz yapılandırılmadı.";
+}
+</script>
 </body>
 </html>
+
