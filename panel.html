@@ -37,7 +37,7 @@ return;
 }
 sonuc.textContent="Kontrol ediliyor...";
 try{
-const r=await fetch(adres+"/rest/v1/",{
+const r=await fetch(adres+"/auth/v1/settings",{
 headers:{"apikey":anahtar}
 });
 sonuc.textContent=r.ok?"Bağlantı başarılı!":"Bağlantı hatası: "+r.status;
